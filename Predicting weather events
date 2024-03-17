@@ -1,0 +1,45 @@
+import numpy as np
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+
+#Định nghĩa các biến mờ
+temperature = ctrl.Antecedent(np.arange(0, 101, 1), 'temperature')
+humidity = ctrl.Antecedent(np.arange(0, 101, 1), 'humidity')
+rain_chance = ctrl.Consequent(np.arange(0, 101, 1), 'rain_chance')
+
+#Xác định hàm của biến
+temperature['cold'] = fuzz.trimf(temperature.universe, [0, 0, 50])
+temperature['moderate'] = fuzz.trimf(temperature.universe, [20, 50, 80])
+temperature['hot'] = fuzz.trimf(temperature.universe, [50, 100, 100])
+
+humidity['low'] = fuzz.trimf(humidity.universe, [0, 0, 50])
+humidity['medium'] = fuzz.trimf(humidity.universe, [20, 50, 80])
+humidity['high'] = fuzz.trimf(humidity.universe, [50, 100, 100])
+
+rain_chance['low'] = fuzz.trimf(rain_chance.universe, [0, 0, 50])
+rain_chance['medium'] = fuzz.trimf(rain_chance.universe, [20, 50, 80])
+rain_chance['high'] = fuzz.trimf(rain_chance.universe, [50, 100, 100])
+
+#Xác định luật mờ
+rule1 = ctrl.Rule(temperature['cold'] & humidity['low'], rain_chance['low'])
+rule2 = ctrl.Rule(temperature['moderate'] & humidity['medium'], rain_chance['medium'])
+rule3 = ctrl.Rule(temperature['hot'] | humidity['high'], rain_chance['high'])
+
+#Tạo hệ thống điều khiển mờ
+rain_prediction_ctrl = ctrl.ControlSystem([rule1, rule2, rule3])
+rain_prediction = ctrl.ControlSystemSimulation(rain_prediction_ctrl)
+
+#Cung cấp giá trị đầu vào
+rain_prediction.input['temperature'] = 75
+rain_prediction.input['humidity'] = 60
+
+#tính khả năng mưa
+rain_prediction.compute()
+
+#In kết quả
+print("Chance of rain:", rain_prediction.output['rain_chance'])
+
+#Hiển thị các biến được xác định
+temperature.view()
+humidity.view()
+rain_chance.view()
