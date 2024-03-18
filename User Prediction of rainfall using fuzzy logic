@@ -1,0 +1,45 @@
+import numpy as np
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+
+# Xác định các biến mờ và phạm vi của chúng
+temperature = ctrl.Antecedent(np.arange(0, 101, 1), 'temperature')
+humidity = ctrl.Antecedent(np.arange(0, 101, 1), 'humidity')
+rainfall = ctrl.Consequent(np.arange(0, 101, 1), 'rainfall')
+
+# Xác định hàm thành viên cho từng biến
+temperature['low'] = fuzz.trimf(temperature.universe, [0, 0, 50])
+temperature['medium'] = fuzz.trimf(temperature.universe, [0, 50, 100])
+temperature['high'] = fuzz.trimf(temperature.universe, [50, 100, 100])
+
+humidity['low'] = fuzz.trimf(humidity.universe, [0, 0, 50])
+humidity['medium'] = fuzz.trimf(humidity.universe, [0, 50, 100])
+humidity['high'] = fuzz.trimf(humidity.universe, [50, 100, 100])
+
+rainfall['low'] = fuzz.trimf(rainfall.universe, [0, 0, 50])
+rainfall['medium'] = fuzz.trimf(rainfall.universe, [0, 50, 100])
+rainfall['high'] = fuzz.trimf(rainfall.universe, [50, 100, 100])
+
+# Xác định luật
+rule1 = ctrl.Rule(temperature['low'] & humidity['low'], rainfall['low'])
+rule2 = ctrl.Rule(temperature['medium'] & humidity['medium'], rainfall['medium'])
+rule3 = ctrl.Rule(temperature['high'] & humidity['high'], rainfall['high'])
+
+#Tạo hệ thống điều khiển
+rainfall_ctrl = ctrl.ControlSystem([rule1, rule2, rule3])
+
+#Tạo mô phỏng
+predict_rainfall = ctrl.ControlSystemSimulation(rainfall_ctrl)
+
+# Đặt đầu vào
+predict_rainfall.input['temperature'] = 70
+predict_rainfall.input['humidity'] = 70
+
+#Tính toán dự đoán
+predict_rainfall.compute()
+
+# Xuất kết quả
+print("Predicted rainfall:", predict_rainfall.output['rainfall'])
+temperature.view()
+humidity.view()
+rainfall.view()
