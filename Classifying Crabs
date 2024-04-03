@@ -1,0 +1,54 @@
+import numpy as np
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+
+# Xác định các biến đầu vào
+carapace_length = ctrl.Antecedent(np.arange(0, 11, 1), 'carapace_length')
+carapace_width = ctrl.Antecedent(np.arange(0, 11, 1), 'carapace_width')
+body_height = ctrl.Antecedent(np.arange(0, 11, 1), 'body_height')
+
+# Xác định biến đầu ra
+classification = ctrl.Consequent(np.arange(0, 11, 1), 'classification')
+
+# Tạo các hàm thành viên
+carapace_length['small'] = fuzz.trimf(carapace_length.universe, [0, 0, 5])
+carapace_length['medium'] = fuzz.trimf(carapace_length.universe, [3, 5, 7])
+carapace_length['large'] = fuzz.trimf(carapace_length.universe, [5, 10, 10])
+
+carapace_width['narrow'] = fuzz.trimf(carapace_width.universe, [0, 0, 5])
+carapace_width['medium'] = fuzz.trimf(carapace_width.universe, [3, 5, 7])
+carapace_width['wide'] = fuzz.trimf(carapace_width.universe, [5, 10, 10])
+
+body_height['short'] = fuzz.trimf(body_height.universe, [0, 0, 5])
+body_height['medium'] = fuzz.trimf(body_height.universe, [3, 5, 7])
+body_height['tall'] = fuzz.trimf(body_height.universe, [5, 10, 10])
+
+classification['edible'] = fuzz.trimf(classification.universe, [0, 0, 5])
+classification['inedible'] = fuzz.trimf(classification.universe, [3, 5, 7])
+classification['poisonous'] = fuzz.trimf(classification.universe, [5, 10, 10])
+
+# Xác định các luật
+rule1 = ctrl.Rule(carapace_length['small'] & carapace_width['narrow'] & body_height['short'], classification['edible'])
+rule2 = ctrl.Rule(carapace_length['medium'] & carapace_width['medium'] & body_height['medium'], classification['inedible'])
+rule3 = ctrl.Rule(carapace_length['large'] & carapace_width['wide'] & body_height['tall'], classification['poisonous'])
+
+# Tạo hệ thống điều khiển
+crab_classifier_ctrl = ctrl.ControlSystem([rule1, rule2, rule3])
+crab_classifier = ctrl.ControlSystemSimulation(crab_classifier_ctrl)
+
+# Cung cấp giá trị đầu vào
+crab_classifier.input['carapace_length'] = 7
+crab_classifier.input['carapace_width'] = 6
+crab_classifier.input['body_height'] = 8
+
+# Tính toán phân loại
+crab_classifier.compute()
+
+# In kết quả
+print("Classification:", crab_classifier.output['classification'])
+
+# Xem các biến
+carapace_length.view()
+carapace_width.view()
+body_height.view()
+classification.view()
