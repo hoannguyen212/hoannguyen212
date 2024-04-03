@@ -45,7 +45,7 @@ cancer_diagnosis.compute()
 # In kết quả
 print("Likelihood of lung cancer:", cancer_diagnosis.output['likelihood'])
 
-# Visualize the membership functions (optional)
+# Xem các biến
 age.view()
 smoking_history.view()
 symptom_score.view()
