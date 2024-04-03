@@ -2,13 +2,13 @@ import numpy as np
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 
-# Define fuzzy variables
+# Xác định các biến
 age = ctrl.Antecedent(np.arange(0, 101, 1), 'age')
 smoking_history = ctrl.Antecedent(np.arange(0, 101, 1), 'smoking_history')
 symptom_score = ctrl.Antecedent(np.arange(0, 11, 1), 'symptom_score')
 likelihood = ctrl.Consequent(np.arange(0, 101, 1), 'likelihood')
 
-# Define membership functions
+# Xác định chức năng thành viên
 age['young'] = fuzz.trimf(age.universe, [0, 0, 40])
 age['middle_aged'] = fuzz.trimf(age.universe, [30, 50, 70])
 age['old'] = fuzz.trimf(age.universe, [60, 80, 100])
@@ -25,24 +25,24 @@ likelihood['low'] = fuzz.trimf(likelihood.universe, [0, 0, 50])
 likelihood['medium'] = fuzz.trimf(likelihood.universe, [40, 60, 80])
 likelihood['high'] = fuzz.trimf(likelihood.universe, [70, 90, 100])
 
-# Define fuzzy rules
+# Xác định các luật
 rule1 = ctrl.Rule(age['young'] & smoking_history['low'] & symptom_score['low'], likelihood['low'])
 rule2 = ctrl.Rule(age['middle_aged'] & smoking_history['medium'] & (symptom_score['medium'] | symptom_score['high']), likelihood['medium'])
 rule3 = ctrl.Rule(age['old'] & smoking_history['high'] & symptom_score['high'], likelihood['high'])
 
-# Create fuzzy control system
+# Tạo hệ thống điều khiển mờ
 cancer_diagnosis_ctrl = ctrl.ControlSystem([rule1, rule2, rule3])
 cancer_diagnosis = ctrl.ControlSystemSimulation(cancer_diagnosis_ctrl)
 
-# Provide input values
+# Cung cấp giá trị đầu vào
 cancer_diagnosis.input['age'] = 55
 cancer_diagnosis.input['smoking_history'] = 70
 cancer_diagnosis.input['symptom_score'] = 7
 
-# Compute the likelihood of lung cancer
+# Tính toán khả năng ung thư phổi
 cancer_diagnosis.compute()
 
-# Print the result
+# In kết quả
 print("Likelihood of lung cancer:", cancer_diagnosis.output['likelihood'])
 
 # Visualize the membership functions (optional)
