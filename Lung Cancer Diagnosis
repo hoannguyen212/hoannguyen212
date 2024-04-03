@@ -1,0 +1,52 @@
+import numpy as np
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+
+# Define fuzzy variables
+age = ctrl.Antecedent(np.arange(0, 101, 1), 'age')
+smoking_history = ctrl.Antecedent(np.arange(0, 101, 1), 'smoking_history')
+symptom_score = ctrl.Antecedent(np.arange(0, 11, 1), 'symptom_score')
+likelihood = ctrl.Consequent(np.arange(0, 101, 1), 'likelihood')
+
+# Define membership functions
+age['young'] = fuzz.trimf(age.universe, [0, 0, 40])
+age['middle_aged'] = fuzz.trimf(age.universe, [30, 50, 70])
+age['old'] = fuzz.trimf(age.universe, [60, 80, 100])
+
+smoking_history['low'] = fuzz.trimf(smoking_history.universe, [0, 0, 50])
+smoking_history['medium'] = fuzz.trimf(smoking_history.universe, [20, 50, 80])
+smoking_history['high'] = fuzz.trimf(smoking_history.universe, [50, 100, 100])
+
+symptom_score['low'] = fuzz.trimf(symptom_score.universe, [0, 0, 5])
+symptom_score['medium'] = fuzz.trimf(symptom_score.universe, [3, 5, 8])
+symptom_score['high'] = fuzz.trimf(symptom_score.universe, [6, 10, 10])
+
+likelihood['low'] = fuzz.trimf(likelihood.universe, [0, 0, 50])
+likelihood['medium'] = fuzz.trimf(likelihood.universe, [40, 60, 80])
+likelihood['high'] = fuzz.trimf(likelihood.universe, [70, 90, 100])
+
+# Define fuzzy rules
+rule1 = ctrl.Rule(age['young'] & smoking_history['low'] & symptom_score['low'], likelihood['low'])
+rule2 = ctrl.Rule(age['middle_aged'] & smoking_history['medium'] & (symptom_score['medium'] | symptom_score['high']), likelihood['medium'])
+rule3 = ctrl.Rule(age['old'] & smoking_history['high'] & symptom_score['high'], likelihood['high'])
+
+# Create fuzzy control system
+cancer_diagnosis_ctrl = ctrl.ControlSystem([rule1, rule2, rule3])
+cancer_diagnosis = ctrl.ControlSystemSimulation(cancer_diagnosis_ctrl)
+
+# Provide input values
+cancer_diagnosis.input['age'] = 55
+cancer_diagnosis.input['smoking_history'] = 70
+cancer_diagnosis.input['symptom_score'] = 7
+
+# Compute the likelihood of lung cancer
+cancer_diagnosis.compute()
+
+# Print the result
+print("Likelihood of lung cancer:", cancer_diagnosis.output['likelihood'])
+
+# Visualize the membership functions (optional)
+age.view()
+smoking_history.view()
+symptom_score.view()
+likelihood.view()
