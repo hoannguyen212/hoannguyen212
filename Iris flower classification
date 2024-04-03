@@ -1,0 +1,49 @@
+import numpy as np
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+
+# Tạo dữ liệu ngẫu nhiên cho mục đích minh họa
+np.random.seed(42)
+sepal_length = np.random.uniform(4, 8, 100)
+sepal_width = np.random.uniform(2, 4.5, 100)
+
+# Tạo các biến
+sepal_length_var = ctrl.Antecedent(np.arange(4, 8.1, 0.1), 'sepal_length')
+sepal_width_var = ctrl.Antecedent(np.arange(2, 4.6, 0.1), 'sepal_width')
+iris_class = ctrl.Consequent(np.arange(0, 2, 1), 'iris_class')
+
+# Xác định hàm thành viên
+sepal_length_var['short'] = fuzz.trimf(sepal_length_var.universe, [4, 4.5, 5])
+sepal_length_var['medium'] = fuzz.trimf(sepal_length_var.universe, [4.5, 5.5, 6.5])
+sepal_length_var['long'] = fuzz.trimf(sepal_length_var.universe, [5.5, 7, 8])
+
+sepal_width_var['narrow'] = fuzz.trimf(sepal_width_var.universe, [2, 2.5, 3])
+sepal_width_var['medium'] = fuzz.trimf(sepal_width_var.universe, [2.5, 3, 3.5])
+sepal_width_var['wide'] = fuzz.trimf(sepal_width_var.universe, [3, 4, 4.5])
+
+iris_class['setosa'] = fuzz.trimf(iris_class.universe, [0, 0, 1])
+iris_class['not_setosa'] = fuzz.trimf(iris_class.universe, [0, 1, 1])
+
+# Tạo luật
+rule1 = ctrl.Rule(sepal_length_var['short'] & sepal_width_var['narrow'], iris_class['setosa'])
+rule2 = ctrl.Rule(sepal_length_var['medium'] | sepal_width_var['medium'], iris_class['not_setosa'])
+rule3 = ctrl.Rule(sepal_length_var['long'] & sepal_width_var['wide'], iris_class['setosa'])
+
+# Tạo hệ thống điều khiển
+iris_ctrl = ctrl.ControlSystem([rule1, rule2, rule3])
+iris_classification = ctrl.ControlSystemSimulation(iris_ctrl)
+
+# Cung cấp giá trị đầu vào
+iris_classification.input['sepal_length'] = 5.1
+iris_classification.input['sepal_width'] = 3.5
+
+# Tính toán phân loại
+iris_classification.compute()
+
+# In ra kết quả
+print("Iris class:", iris_classification.output['iris_class'])
+
+# Xem các biến
+sepal_length_var.view()
+sepal_width_var.view()
+iris_class.view()
