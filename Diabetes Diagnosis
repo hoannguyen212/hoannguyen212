@@ -1,0 +1,57 @@
+import numpy as np
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+
+# Xác định các biến 
+blood_sugar = ctrl.Antecedent(np.arange(0, 201, 1), 'blood_sugar')
+age = ctrl.Antecedent(np.arange(0, 101, 1), 'age')
+bmi = ctrl.Antecedent(np.arange(0, 51, 1), 'bmi')
+family_history = ctrl.Antecedent(np.arange(0, 101, 1), 'family_history')
+likelihood = ctrl.Consequent(np.arange(0, 101, 1), 'likelihood')
+
+# Xác định chức năng các biến
+blood_sugar['low'] = fuzz.trimf(blood_sugar.universe, [0, 0, 100])
+blood_sugar['normal'] = fuzz.trimf(blood_sugar.universe, [80, 100, 120])
+blood_sugar['high'] = fuzz.trimf(blood_sugar.universe, [100, 200, 200])
+
+age['young'] = fuzz.trimf(age.universe, [0, 0, 30])
+age['middle_aged'] = fuzz.trimf(age.universe, [20, 40, 60])
+age['old'] = fuzz.trimf(age.universe, [50, 100, 100])
+
+bmi['underweight'] = fuzz.trimf(bmi.universe, [0, 0, 18.5])
+bmi['normal'] = fuzz.trimf(bmi.universe, [18.5, 25, 30])
+bmi['overweight'] = fuzz.trimf(bmi.universe, [25, 30, 50])
+
+family_history['low'] = fuzz.trimf(family_history.universe, [0, 0, 50])
+family_history['medium'] = fuzz.trimf(family_history.universe, [25, 50, 75])
+family_history['high'] = fuzz.trimf(family_history.universe, [50, 100, 100])
+
+likelihood['low'] = fuzz.trimf(likelihood.universe, [0, 25, 50])
+likelihood['medium'] = fuzz.trimf(likelihood.universe, [40, 60, 80])
+likelihood['high'] = fuzz.trimf(likelihood.universe, [70, 90, 100])
+
+# Xác định luật
+rule1 = ctrl.Rule(blood_sugar['low'] & age['young'] & bmi['normal'] & family_history['low'], likelihood['low'])
+rule2 = ctrl.Rule(blood_sugar['normal'] & age['middle_aged'] & bmi['overweight'] & (family_history['medium'] | family_history['high']), likelihood['high'])
+rule3 = ctrl.Rule(blood_sugar['high'] | age['old'] | bmi['overweight'] & family_history['high'], likelihood['high'])
+
+# Tạo hệ thống điều khiển các biến
+diagnosis_ctrl = ctrl.ControlSystem([rule1, rule2, rule3])
+diagnosis = ctrl.ControlSystemSimulation(diagnosis_ctrl)
+
+# Cung cấp giá trị đầu vào
+diagnosis.input['blood_sugar'] = 120
+diagnosis.input['age'] = 45
+diagnosis.input['bmi'] = 28
+diagnosis.input['family_history'] = 70
+
+# Tính toán chẩn đoán
+diagnosis.compute()
+
+# In ra kết quả
+print("Likelihood of diabetes:", diagnosis.output['likelihood'])
+
+# Xem các biến
+blood_sugar.view()
+age.view()
+bmi.view
