@@ -1,0 +1,79 @@
+import numpy as np
+import pandas as pd
+import cv2
+import matplotlib.pyplot as plt
+from PIL import Image
+from keras.preprocessing.image import ImageDataGenerator, load_img
+from keras.models import Sequential
+from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, Activation
+from keras.optimizers import Adam
+from google.colab import drive
+drive.mount('/content/drive')
+url = '/content/drive/MyDrive/Car'
+img_size = 256
+batch = 32
+train_datagen = ImageDataGenerator(
+    rescale=1./255,
+    rotation_range=20,
+    shear_range=0.2,
+    zoom_range=0.2,
+    horizontal_flip=True,
+    width_shift_range=0.1,
+    height_shift_range=0.1,
+    validation_split=0.2)
+test_datagen = ImageDataGenerator(rescale=1./255,validation_split=0.2)
+
+train_generator = train_datagen.flow_from_directory(
+    url,
+    target_size=(224, 224),
+    batch_size=32,
+    class_mode='categorical',)
+
+validation_generator = test_datagen.flow_from_directory(
+    url,
+    target_size=(224, 224),
+    batch_size=32,
+    class_mode='categorical',)
+# Kiến trúc mạng được cải thiện
+model = Sequential()
+# Bộ 1 Convolution
+model.add(Conv2D(filters=64, kernel_size=(5, 5),  padding = 'same', activation='relu', input_shape=(224, 224, 3)))
+model.add(MaxPooling2D((2, 2)))
+# Bộ 2 Convolution
+model.add(Conv2D(filters=64, kernel_size=(3, 3),  padding = 'same', activation='relu'))
+model.add(MaxPooling2D((2, 2), strides = (2,2)))
+# Bộ 3 Convolution
+model.add(Conv2D(filters=64, kernel_size=(3, 3),  padding = 'same', activation='relu'))
+model.add(MaxPooling2D((2, 2), strides = (2,2)))
+# ANN
+model.add(Flatten())
+model.add(Dense(512,activation = 'relu'))
+model.add(Dense(8, activation='softmax'))# thay đổi số dựa theo số lớp
+model.compile(loss='categorical_crossentropy', optimizer=Adam(), metrics=['accuracy'])
+model.fit_generator(train_generator,
+                    epochs=60,
+                    validation_data=validation_generator, verbose=2)
+model.save('CAR_1.h5')from keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array
+from keras.models import load_model
+import numpy as np
+import matplotlib.pyplot as plt
+# *Lưu mô hình đã huấn luyện*
+model = load_model('/content/CAR_1.h5')
+
+# *Hàm dự đoán loài hoa*
+def predict_flower(image_path):
+  img = load_img(image_path, target_size=(224, 224))  # Đảm bảo kích thước ảnh giống với huấn luyện
+  img_array = img_to_array(img) / 255.0  # Chuẩn hóa ảnh
+  img_batch = np.expand_dims(img_array, axis=0)  # Thêm một chiều cho phù hợp với đầu vào mô hình
+
+  predictions = model.predict(img_batch)  # Dự đoán xác suất của các lớp
+  predicted_class = np.argmax(predictions[0])  # Lấy lớp có xác suất cao nhất
+
+  # Hiển thị kết quả dự đoán (tùy chỉnh theo tên lớp trong train_generator.class_indices)
+  class_names = ['Audi', 'BMW','Honda', 'Lamborghini','Lexus','Merceddes','Tesla','Toyota']
+  print('Dự đoán: {}'.format(class_names[predicted_class]))
+  plt.imshow(img)
+  plt.show()
+# *Ví dụ sử dụng*
+image_path = '/content/drive/MyDrive/Car/Lamborghini/logo-xe-hoi-lamborghini - Copy.jpg'
+predict_flower(image_path)
